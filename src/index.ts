@@ -148,6 +148,7 @@ napcat.on('message.group.normal', async (context: AllHandlers['message.group.nor
   if (!command || !command.startsWith('/stb ')) return;
   const group = config.groups.find((g) => g === context.group_id);
   if (!group && !text?.startsWith('/phira')) return;
+  console.log(`[NapCat] Received: ${text} from group ${context.group_id}`);
   const [appr, deny, withinMins] = command
     .slice(5)
     .trim()
@@ -156,7 +157,6 @@ napcat.on('message.group.normal', async (context: AllHandlers['message.group.nor
     .filter((s) => s.length > 0)
     .map((s) => parseInt(s, 10))
     .concat([NaN, NaN, NaN]);
-  console.log(`[NapCat] Received command: /stb ${appr} ${deny} ${withinMins} from group ${group}`);
   const charts = await getRecentRequests(
     constructThresholds(appr, deny),
     withinMins * 60 * 1000
