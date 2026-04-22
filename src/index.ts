@@ -10,7 +10,6 @@ const napcat = new NCWebsocket(
   {
     baseUrl: config.napcatWs,
     accessToken: config.napcatToken,
-    throwPromise: true,
     reconnection: {
       enable: true,
       attempts: 10,
