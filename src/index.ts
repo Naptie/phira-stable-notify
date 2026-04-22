@@ -70,8 +70,10 @@ const respond = (
   }
   const messages = charts.map((req, i) => {
     const { chart, approvedBy, deniedBy } = req;
-    const approvalStr = `✅ ${approvedBy.length > 0 ? approvedBy.join(', ') : '无'}\n`;
-    const denialStr = `❌ ${deniedBy.length > 0 ? deniedBy.join(', ') : '无'}\n`;
+    const approvalStr =
+      (approvedBy.length > 0 ? approvedBy.map((e) => `✅ ${e}`).join('，') : '无') + '\n';
+    const denialStr =
+      (deniedBy.length > 0 ? deniedBy.map((e) => `❌ ${e}`).join('，') : '无') + '\n';
     const updatedStr = showTime ? `🕓 ${new Date(chart.updated).toLocaleString()}\n` : '';
     const infoStr = `详情：https://phira.moe/chart/${chart.id}\n`;
     const previewStr = `预览：https://player.phizone.cn/?zip=https://ra.phi.zone/${toBase62(chart.file.split('/').slice(-1)[0])}`;
