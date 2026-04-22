@@ -1,5 +1,5 @@
 {
-  "name": "qbind",
+  "name": "phira-stable-notify",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
