@@ -4,7 +4,7 @@ import config from '../config.json' with { type: 'json' };
 import { getRecentRequests } from './client.js';
 
 const BASE62_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-const batchSize = 50;
+const messageBatchSize = 50;
 
 const napcat = new NCWebsocket(
   {
@@ -67,7 +67,7 @@ const respond = (
   if (charts.length === 0) {
     return isSilent ? undefined : text('未找到符合条件的谱面上架申请。');
   }
-  const messages = charts.map((req, i) => {
+  const messages = charts.map((req, i): string => {
     const { chart, approvedBy, deniedBy } = req;
     const approvalStr =
       (approvedBy.length > 0 ? approvedBy.map((e) => `✅ ${e}`).join(' ') : '无人通过') + '\n';
@@ -77,7 +77,8 @@ const respond = (
     const infoStr = `详情：https://phira.moe/chart/${chart.id}\n`;
     const previewStr = `预览：https://player.phizone.cn/?zip=https://ra.phi.zone/${toBase62(chart.file.split('/').slice(-1)[0])}`;
     return (
-      `${i % 20 === 0 ? '' : '\n\n'}${i + 1}. #${chart.id} ${chart.name} [${chart.level}]\n` +
+      `${i % messageBatchSize === 0 ? '' : '\n\n'}${messages.length > 1 ? `${i + 1}. ` : ''}` +
+      `#${chart.id} ${chart.name} [${chart.level}]\n` +
       approvalStr +
       denialStr +
       updatedStr +
@@ -86,9 +87,13 @@ const respond = (
     );
   });
   return messages.length > 2
-    ? new Array(Math.ceil(messages.length / batchSize)).fill(0).map((_, i) => ({
+    ? new Array(Math.ceil(messages.length / messageBatchSize)).fill(0).map((_, i) => ({
         type: 'node' as const,
-        data: { content: messages.slice(i * batchSize, (i + 1) * batchSize).map((m) => text(m)) }
+        data: {
+          content: messages
+            .slice(i * messageBatchSize, (i + 1) * messageBatchSize)
+            .map((m) => text(m))
+        }
       }))
     : text(messages.join(''));
 };
