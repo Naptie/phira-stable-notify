@@ -67,7 +67,7 @@ const respond = (
   if (charts.length === 0) {
     return isSilent ? undefined : text('未找到符合条件的谱面上架申请。');
   }
-  const messages = charts.map((req, i): string => {
+  const messages = charts.map((req, i) => {
     const { chart, approvedBy, deniedBy } = req;
     const approvalStr =
       (approvedBy.length > 0 ? approvedBy.map((e) => `✅ ${e}`).join(' ') : '无人通过') + '\n';
@@ -77,7 +77,7 @@ const respond = (
     const infoStr = `详情：https://phira.moe/chart/${chart.id}\n`;
     const previewStr = `预览：https://player.phizone.cn/?zip=https://ra.phi.zone/${toBase62(chart.file.split('/').slice(-1)[0])}`;
     return (
-      `${i % messageBatchSize === 0 ? '' : '\n\n'}${messages.length > 1 ? `${i + 1}. ` : ''}` +
+      `${i % messageBatchSize === 0 ? '' : '\n\n'}${charts.length > 1 ? `${i + 1}. ` : ''}` +
       `#${chart.id} ${chart.name} [${chart.level}]\n` +
       approvalStr +
       denialStr +
