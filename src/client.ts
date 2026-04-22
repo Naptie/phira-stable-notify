@@ -44,13 +44,8 @@ export const getRecentRequests = async (
       ...results.filter((req) => {
         const approvedCount = req.approvedBy.length;
         const deniedCount = req.deniedBy.length;
-        if (
-          !(isNaN(thresholds.approvals) || approvedCount === 0) &&
-          approvedCount < thresholds.approvals
-        )
-          return false;
-        if (!(isNaN(thresholds.denials) || deniedCount === 0) && deniedCount < thresholds.denials)
-          return false;
+        if (!isNaN(thresholds.approvals) && approvedCount < thresholds.approvals) return false;
+        if (!isNaN(thresholds.denials) && deniedCount < thresholds.denials) return false;
         const updatedTime = new Date(req.chart.updated).getTime();
         if (
           withinMillis !== undefined &&
