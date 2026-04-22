@@ -28,7 +28,6 @@ export const getRecentRequests = async (
       (!hasTimeLimit ||
         now - new Date(charts.at(-1)?.chart.updated ?? 0).getTime() <= withinMillis))
   ) {
-    console.log(`[NapCat] Fetching page ${page}...`);
     const response = await fetch(`${API_URL}?page=${page++}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
