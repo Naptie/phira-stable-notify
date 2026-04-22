@@ -126,14 +126,29 @@ const constructThresholds = (approvals: number | undefined, denials: number | un
   return thresholds as { approvals: number; denials: number };
 };
 
+const sendResponse = async (groupId: number, response: ReturnType<typeof respond>) => {
+  if (response) {
+    if (Array.isArray(response)) {
+      for (const segment of response) {
+        await napcat.send_group_msg({ group_id: groupId, message: [segment] }).catch((err) => {
+          console.error(`[NapCat] Error sending message`, err);
+        });
+      }
+    } else {
+      await napcat.send_group_msg({ group_id: groupId, message: [response] }).catch((err) => {
+        console.error(`[NapCat] Error sending message`, err);
+      });
+    }
+  }
+};
+
 napcat.on('message.group.normal', async (context: AllHandlers['message.group.normal']) => {
-  const text = context.message
-    .find((m) => m.type === 'text')
-    ?.data.text?.replace(/^\/sta?bl?e?\s*/, '/stb ');
-  if (!text || !text.startsWith('/stb ')) return;
+  const text = context.message.find((m) => m.type === 'text')?.data.text;
+  const command = text?.replace(/^\/(?:phira)?-?sta?bl?e?\s*/, '/stb ');
+  if (!command || !command.startsWith('/stb ')) return;
   const group = config.groups.find((g) => g === context.group_id);
-  if (!group) return;
-  const [appr, deny, withinMins] = text
+  if (!group && !text?.startsWith('/phira')) return;
+  const [appr, deny, withinMins] = command
     .slice(5)
     .trim()
     .split(' ')
@@ -150,19 +165,7 @@ napcat.on('message.group.normal', async (context: AllHandlers['message.group.nor
     return [];
   });
   const response = respond(charts);
-  if (response) {
-    if (Array.isArray(response)) {
-      for (const segment of response) {
-        await napcat.send_group_msg({ group_id: group, message: [segment] }).catch((err) => {
-          console.error(`[NapCat] Error sending message`, err);
-        });
-      }
-    } else {
-      await napcat.send_group_msg({ group_id: group, message: [response] }).catch((err) => {
-        console.error(`[NapCat] Error sending message`, err);
-      });
-    }
-  }
+  await sendResponse(context.group_id, response);
 });
 
 await napcat.connect();
@@ -177,20 +180,8 @@ const interval = setInterval(async () => {
       }
     );
     const response = respond(charts, true, false);
-    if (response) {
-      for (const group of config.groups) {
-        if (Array.isArray(response)) {
-          for (const segment of response) {
-            await napcat.send_group_msg({ group_id: group, message: [segment] }).catch((err) => {
-              console.error(`[NapCat] Error sending message`, err);
-            });
-          }
-        } else {
-          await napcat.send_group_msg({ group_id: group, message: [response] }).catch((err) => {
-            console.error(`[NapCat] Error sending message`, err);
-          });
-        }
-      }
+    for (const group of config.groups) {
+      await sendResponse(group, response);
     }
   } catch (err) {
     console.error(`[NapCat] Error in interval task`, err);
