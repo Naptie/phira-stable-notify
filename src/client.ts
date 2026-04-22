@@ -19,15 +19,16 @@ export const getRecentRequests = async (
   let total = 0;
   let accumulated = 0;
   const now = Date.now();
+  const hasTimeLimit =
+    withinMillis !== undefined && !Number.isNaN(withinMillis) && withinMillis > 0;
 
   while (
-    (withinMillis !== undefined &&
-      !isNaN(withinMillis) &&
-      withinMillis > 0 &&
-      now - new Date(charts[charts.length - 1]?.chart.updated || 0).getTime() <= withinMillis) ||
     total === 0 ||
-    accumulated < total
+    (accumulated < total &&
+      (!hasTimeLimit ||
+        now - new Date(charts.at(-1)?.chart.updated ?? 0).getTime() <= withinMillis))
   ) {
+    console.log(`[NapCat] Fetching page ${page}...`);
     const response = await fetch(`${API_URL}?page=${page++}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
@@ -43,8 +44,13 @@ export const getRecentRequests = async (
       ...results.filter((req) => {
         const approvedCount = req.approvedBy.length;
         const deniedCount = req.deniedBy.length;
-        if (!isNaN(thresholds.approvals) && approvedCount < thresholds.approvals) return false;
-        if (!isNaN(thresholds.denials) && deniedCount < thresholds.denials) return false;
+        if (
+          !(isNaN(thresholds.approvals) || approvedCount === 0) &&
+          approvedCount < thresholds.approvals
+        )
+          return false;
+        if (!(isNaN(thresholds.denials) || deniedCount === 0) && deniedCount < thresholds.denials)
+          return false;
         const updatedTime = new Date(req.chart.updated).getTime();
         if (
           withinMillis !== undefined &&
